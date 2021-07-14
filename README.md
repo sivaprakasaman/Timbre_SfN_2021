@@ -17,7 +17,7 @@ The code provided allows the user to either provide real-world sounds or generat
 
 The methods are summarized by the below diagram. 
 
-![Methods Flow Chart](https://github.com/sivaprakasaman/Timbre_SfN_2021/Figures/methods_flow.png)
+![Methods Flow Chart](/Figures/methods_flow.png)
 
 ### Code Synopsis:
 
@@ -38,13 +38,13 @@ I chose to compare the coding of four different instrumental sounds with distinc
 
 To quantify coding deficits across auditory neurons of varying CF, I chose to look at the difference between the normal and impaired hearing coherence at each CF. TFS deficit (Percentage Loss) was quantified as the percent difference at each harmonic of 440 Hz in the TFS coherence spectrum, and ENV deficit was quantified as the mean coherence difference in a 0-440Hz band in the ENV coherence spectrum. 
 
-![TFS Coherence](https://github.com/sivaprakasaman/Timbre_SfN_2021/Figures/PartA/TFS_440_compare.png)
-![ENV Coherence](https://github.com/sivaprakasaman/Timbre_SfN_2021/Figures/PartA/ENV_1320_compare.png)
+![TFS Coherence](Figures/PartA/TFS_440_compare.png)
+![ENV Coherence](Figures/PartA/ENV_1320_compare.png)
 
 The results across instruments were also visualized. TFS coherence tends to worsen with impaired hearing, despite the compensatory 40 dB increase. ENV coherence tends to be enhanced at low CFs with hearing impairment, but is degraded at CFs>1320 Hz. These findings could be in part explained by broadened tuning of the cochlear channels from OHC damage. Since filtering is normally narrow at low frequencies it makes sense that ENV coding is enhanced at low frequencies. At high frequencies, broadened tuning is normal, and pitch is unresolved, resulting in more ENV coding. In this case the ENV coding may be weaker in impaired hearing because of impaired IHC-related transduction of sound. 
 
-![Coherence_Orig](https://github.com/sivaprakasaman/Timbre_SfN_2021/Figures/PartA/TFS_ENV_compare_PartA.png)
-![Coherence_Art](https://github.com/sivaprakasaman/Timbre_SfN_2021/Figures/PartB/TFS_ENV_compare_PartB.png)
-![Coherence_Resynth](https://github.com/sivaprakasaman/Timbre_SfN_2021/Figures/PartC/TFS_ENV_compare_PartC.png)
+![Coherence_Orig](Figures/PartA/TFS_ENV_compare_PartA.png)
+![Coherence_Art](Figures/PartB/TFS_ENV_compare_PartB.png)
+![Coherence_Resynth](Figures/PartC/TFS_ENV_compare_PartC.png)
 
 Note that the **TFS and ENV coherence varies depending on the instrument and articulation**. Therefore, it may be possible that our ability to differentiate between instrumental sounds using timbre may be impacted differently depending on the sound itself. For example, maybe we can distinguish a violin's sound better than that of a bassoon, even if we have hearing loss.  
