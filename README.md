@@ -42,15 +42,15 @@ I chose to compare the coding of four different instrumental sounds with distinc
 To quantify coding deficits across auditory neurons of varying CF, I chose to look at the difference between the normal and impaired hearing coherence at each CF. TFS deficit (Percentage Loss) was quantified as the percent difference at each harmonic of 440 Hz in the TFS coherence spectrum, and ENV deficit was quantified as the mean coherence difference in a 0-440Hz band in the ENV coherence spectrum. 
 
 <p float="left">
-<img src="Figures/TFS_440_compare.png" width="350" height="251">
-<img src="Figures/ENV_1320_compare.png" width="350" height="251">
+<img src="Figures/TFS_440_compare.png" width="390" height="280">
+<img src="Figures/ENV_1320_compare.png" width="390" height="280">
 </p>
 The results across instruments were also visualized. TFS coherence tends to worsen with impaired hearing, despite the compensatory 40 dB increase. ENV coherence tends to be enhanced at low CFs with hearing impairment, but is degraded at CFs>1320 Hz. These findings could be in part explained by broadened tuning of the cochlear channels from OHC damage. Since filtering is normally narrow at low frequencies it makes sense that ENV coding is enhanced at low frequencies. At high frequencies, broadened tuning is normal, and pitch is unresolved, resulting in more ENV coding. In this case the ENV coding may be weaker in impaired hearing because of impaired IHC-related transduction of sound. 
 
 <p float="left">
-<img src="Figures/TFS_ENV_Compare_PartA.png" width="350" height="251">
-<img src="Figures/TFS_ENV_Compare_PartB.png" width="350" height="251">
-<img src="Figures/TFS_ENV_Compare_PartC.png" width="350" height="251">
+<img src="Figures/TFS_ENV_Compare_PartA.png" width="390" height="280">
+<img src="Figures/TFS_ENV_Compare_PartB.png" width="390" height="280">
+<img src="Figures/TFS_ENV_Compare_PartC.png" width="390" height="280">
 </p>
 
 Note that the **TFS and ENV coherence varies depending on the instrument and articulation**. Therefore, it may be possible that our ability to differentiate between instrumental sounds using timbre may be impacted differently depending on the sound itself. For example, maybe we can distinguish a violin's sound better than that of a bassoon, even if we have hearing loss.  
