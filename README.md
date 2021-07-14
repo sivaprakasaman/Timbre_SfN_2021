@@ -47,8 +47,8 @@ To quantify coding deficits across auditory neurons of varying CF, I chose to lo
 The results across instruments were also visualized. TFS coherence tends to worsen with impaired hearing, despite the compensatory 40 dB increase. ENV coherence tends to be enhanced at low CFs with hearing impairment, but is degraded at CFs>1320 Hz. These findings could be in part explained by broadened tuning of the cochlear channels from OHC damage. Since filtering is normally narrow at low frequencies it makes sense that ENV coding is enhanced at low frequencies. At high frequencies, broadened tuning is normal, and pitch is unresolved, resulting in more ENV coding. In this case the ENV coding may be weaker in impaired hearing because of impaired IHC-related transduction of sound. 
 
 
-<img src="Figures/TFS_ENV_compare_PartA.png" width="410" height="294">
+<img src="Figures/TFS_ENV_Compare_PartA.png" width="410" height="294">
 <img src="Figures/TFS_ENV_Compare_PartB.png" width="410" height="294">
-<img src="Figures/TFS_ENV_compare_PartC.png" width="410" height="294">
+<img src="Figures/TFS_ENV_Compare_PartC.png" width="410" height="294">
 
 Note that the **TFS and ENV coherence varies depending on the instrument and articulation**. Therefore, it may be possible that our ability to differentiate between instrumental sounds using timbre may be impacted differently depending on the sound itself. For example, maybe we can distinguish a violin's sound better than that of a bassoon, even if we have hearing loss.  
