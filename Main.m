@@ -1,0 +1,581 @@
+%Andrew Sivaprakasam
+
+%tic
+%% Clearing and Adding Paths
+clear all, close all
+
+addpath('Sound_Samples/Part A/')
+addpath('Sound_Samples/Part B/')
+addpath('Sound_Samples/Part C/')
+addpath('Functions')
+addpath('Sound_Samples/Part B/Violin')
+addpath('BEZ2018model')
+
+%% Compiling C Code
+% 
+% cd BEZ2018model
+% mexANmodel
+% cd ../ 
+% 
+% cd Functions
+% mex gammatone_c.c
+% cd ../
+
+%% Model Parameter Initialization:
+
+%modelParams.CF = 0;
+F0 = 440;
+CF = [F0, 2*F0, 3*F0, 4*F0, 5*F0, 6*F0, 7*F0];
+dB_loss = ones(length(CF),1)*45; %flat 45 db HL
+NFFT = 4000;
+NW = 3;
+dB_stim = 25;
+
+%Normal Model Params
+modelParams.spont = 70;
+modelParams.tabs = 0.6e-3;
+modelParams.trel = 0.6e-3;
+modelParams.cohc = ones(length(CF),1); %healthy
+modelParams.cihc = ones(length(CF),1); %healthy
+modelParams.species = 2; % 1 for cat (2 for human with Shera et al. tuning; 3 for human with Glasberg & Moore tuning) %read up on this tuning
+modelParams.noiseType = 0; % 1 for variable fGn; 0 for fixed (frozen) fGn
+modelParams.implnt = 0; % "0" for approximate or "1" for actual implementation of the power-law functions in the Synapse
+modelParams.stimdb = dB_stim;
+modelParams.dur = 1; % stimulus duration in seconds, adjusted automatically to stimulus length
+modelParams.reps = 75; 
+modelParams.Fs = 100e3;
+modelParams.psthbinwidth = 1e-4;
+modelParams.buffer = 2;
+
+%Impaired Params (just changing cohc/cihc):
+[cohc_impaired,cihc_impaired,~] = fitaudiogram2(CF,dB_loss,modelParams.species);
+
+
+%% Stimuli Initialization:
+
+%Instrument
+instruments = ["bassoon","flute","violin","banjo"];
+%instruments = ["violin"];
+%instruments = ["SAM Tone"];
+
+%ARTICULATION
+%instruments = ["Spiccato","Martele"];
+%articulations = ["violin_A4_phrase_forte_arco-spiccato.mp3","violin_A4_phrase_forte_arco-martele.mp3"];
+
+pitch = 'A4';
+cond = 'resynth';
+
+
+%% Spectral Analysis:
+l_instr = length(instruments);
+
+bankedSig = cell(1,l_instr); 
+psth_pos = cell(1,l_instr);
+psth_neg = cell(1,l_instr);
+env_cohere = cell(1,l_instr);
+tfs_cohere = cell(1,l_instr);
+s = cell(1,l_instr);
+phi = cell(1,l_instr);
+input_env = cell(1,l_instr);
+input_tfs = cell(1,l_instr);
+env_csd = cell(1,l_instr);
+tfs_csd = cell(1,l_instr);
+env_psd = cell(1,l_instr);
+tfs_psd = cell(1,l_instr);
+input_env_psd = cell(1,l_instr);
+input_tfs_psd = cell(1,l_instr);
+peak_tfs_harm = cell(1,l_instr);
+freq_peak = cell(1,l_instr);
+env_cohere_mean = cell(1,l_instr);
+
+i_psth_pos = cell(1,l_instr);
+i_psth_neg = cell(1,l_instr);
+i_env_cohere = cell(1,l_instr);
+i_tfs_cohere = cell(1,l_instr);
+i_s = cell(1,l_instr);
+i_phi = cell(1,l_instr);
+i_env_csd = cell(1,l_instr);
+i_tfs_csd = cell(1,l_instr);
+i_env_psd = cell(1,l_instr);
+i_tfs_psd = cell(1,l_instr);
+i_peak_tfs_harm = cell(1,l_instr);
+i_freq_peak = cell(1,l_instr);
+i_env_cohere_mean = cell(1,l_instr);
+
+dur = cell(1,l_instr);
+
+wb = waitbar(0,'Starting Data Processing...');
+for i = 1:l_instr
+   
+    %instrument comparison
+    filename = strcat(instruments(i),'_',pitch,'_',cond,'.wav');
+    
+    %articulation comparison
+    %filename = articulations(i);
+    
+    %test
+    %filename = 'SAM_test.wav';
+    waitbar((i-1)/l_instr,wb,strcat('Processing- ', instruments(i),' Normal Hearing'));
+    [input, input_fs] = audioread(filename);
+    
+    dur{i} = length(input)/input_fs;
+    modelParams.dur = dur{i};
+    
+    %Normal Hearing
+    modelParams.cohc = ones(length(CF),1); %healthy
+    modelParams.cihc = ones(length(CF),1); %healthy
+    modelParams.stimdb = dB_stim;
+    
+    input_n = gen_rescale(input, dB_stim);
+    
+    [bankedSig{i}] = cochlearFilterBank(input_n, input_fs, CF, 0); %1 for hwave rect
+    [psth_pos{i}, psth_neg{i}, psth_fs] = getAP_PSTH(input, input_fs, modelParams, CF);
+    [env_cohere{i}, tfs_cohere{i}, freq_cohere,  peak_tfs_harm{i}, freq_peak{i}, env_cohere_mean{i}, s{i}, phi{i}, input_env{i}, input_tfs{i}] = getCoherence(bankedSig{i}, input_fs, psth_pos{i}, psth_neg{i}, psth_fs, NFFT, CF);
+    [env_csd{i}, tfs_csd{i}, env_psd{i}, tfs_psd{i}, input_env_psd{i}, input_tfs_psd{i}, freq_SD] = getCSD(input_env{i}, input_tfs{i}, s{i}, phi{i}, NW, NFFT, psth_fs,"pmtm"); 
+    
+    waitbar((i-.5)/l_instr,wb,strcat('Processing- ',instruments(i),' Impaired Hearing'));
+
+    %Impaired
+    modelParams.cohc = cohc_impaired; 
+    modelParams.cihc = cihc_impaired; 
+    modelParams.stimdb = dB_stim + mean(dB_loss); %amplified
+    
+    input_i = gen_rescale(input, dB_stim + mean(dB_loss));
+
+    [i_psth_pos{i}, i_psth_neg{i}, ~] = getAP_PSTH(input_i, input_fs, modelParams, CF);
+    [i_env_cohere{i}, i_tfs_cohere{i}, ~, i_peak_tfs_harm{i}, i_freq_peak{i}, i_env_cohere_mean{i}, i_s{i}, i_phi{i}, ~, ~] = getCoherence(bankedSig{i}, input_fs, i_psth_pos{i}, i_psth_neg{i}, psth_fs, NFFT, CF);
+    [i_env_csd{i}, i_tfs_csd{i}, i_env_psd{i}, i_tfs_psd{i}, ~, ~, ~] = getCSD(input_env{i}, input_tfs{i}, i_s{i}, i_phi{i}, NW, NFFT, psth_fs,"pmtm"); 
+     
+end
+%toc
+
+waitbar(1,wb,'Done!');
+pause(0.2);
+close(wb);
+
+%% Audiogram:
+
+audiogram = figure;
+
+hold on
+plot(CF, zeros(1,length(dB_loss)),'o-k','LineWidth',4,'MarkerSize',15);
+plot(CF, dB_loss,'o-r','LineWidth',4,'MarkerSize',15);
+hold off
+
+xlim([min(CF)-20,max(CF)+100]);
+ylim([-5, max(dB_loss)+5]);
+set(gca, 'Ydir', 'reverse')
+set(gca, 'XScale', 'log')
+set(gca, 'FontSize', 12);
+xticks(CF);
+xticklabels(split(num2str(CF)));
+xtickangle(45)
+title('Audiogram');
+xlabel('Frequency (Hz)');
+ylabel('dB Hearing Loss');
+legend('Normal','Impaired','Location','southwest');
+grid on;
+box on;
+
+
+
+%% Plot Params:
+
+instrum = 1;    
+CF_ind = 1; 
+FontSize = 11;
+
+colors = [0, 0.4470, 0.7410; 0.8500, 0.3250, 0.0980; 0.9290, 0.6940, 0.1250; 0.4940, 0.1840, 0.5560;0.4660, 0.6740, 0.1880;0.3010, 0.7450, 0.9330;0.6350, 0.0780, 0.1840];
+
+%% Gammatone:
+figure;
+for i = 1:length(CF)
+    subplot(length(cihc_impaired),1,i);
+    plot(bankedSig{instrum}(i,:),'k')
+    xlim([0,dur{instrum}*input_fs]);
+    title(strcat('CF = ',num2str(CF(i))));
+    set(gca, 'FontSize',FontSize);
+end
+ 
+xlabel('Sample #');
+
+%% apPSTH |normal/impaired| Stimulus Plot
+
+%apPSTH
+simtime = modelParams.buffer*ceil(dur{instrum});
+tvect = 0:modelParams.psthbinwidth:simtime-modelParams.psthbinwidth;
+
+tt= (0:1:(simtime*input_fs-1))/input_fs;
+
+px = zeros(1,simtime*input_fs);
+px(1:length(bankedSig{instrum}(CF_ind,:))) = bankedSig{instrum}(CF_ind,:);
+
+tenv =  (0:1:(simtime*psth_fs-1))/psth_fs;
+
+px_env = zeros(1,simtime*psth_fs);
+px_env(1:length(input_env{instrum}(:,CF_ind))) = input_env{instrum}(:,CF_ind);
+
+figure;
+subplot(3,1,1);
+hold on
+plot(tvect*1e3, psth_pos{instrum}(CF_ind,:)/modelParams.reps/modelParams.psthbinwidth) % Plot of estimated mean spike rate
+plot(tvect*1e3, -psth_neg{instrum}(CF_ind,:)/modelParams.reps/modelParams.psthbinwidth) % Plot of estimated mean spike rate
+hold off
+text(75,2500,strcat('CF = ', num2str(CF(CF_ind))),'FontSize',15)
+
+ylabel('Firing Rate (/s)')
+xlim(ceil(tt([1 end])*1e3))
+ylim([-2000,2000]);
+title('apPSTH | Normal Hearing')
+legend('(+)','( - )')
+set(gca, 'FontSize',FontSize);
+
+
+subplot(3,1,2);
+hold on
+plot(tvect*1e3, i_psth_pos{instrum}(CF_ind,:)/modelParams.reps/modelParams.psthbinwidth) % Plot of estimated mean spike rate
+plot(tvect*1e3, -i_psth_neg{instrum}(CF_ind,:)/modelParams.reps/modelParams.psthbinwidth) % Plot of estimated mean spike rate
+hold off
+
+y1 = ylabel('Firing Rate (/s)');
+xlim(ceil(tt([1 end])*1e3))
+ylim([-2000,2000]);
+title('apPSTH | Impaired Hearing')
+set(gca, 'FontSize',FontSize);
+
+subplot(3,1,3);
+hold on
+plot(tt*1e3, px,'k');
+plot(tenv*1e3, px_env,'r','LineWidth',1.5);
+hold off
+y2 = ylabel('Pressure (Pa)');
+xlabel('Time (ms)')
+title(strcat(instruments(instrum),' (Filtered at CF)'))
+legend('Stimulus','Envelope')
+set(gca, 'FontSize',FontSize);
+set(y2,'Position',[y1.Position(1),y2.Position(2),y2.Position(3)]);
+set(gcf,'Position',[1200, 500, 600, 500]);
+
+%% Coherence Normal Hearing across Instruments
+
+instrum = instrum;
+CF_ind = CF_ind;
+compare = [1:4];
+
+figure;
+hold on
+for i = 1:length(compare)
+    plot(freq_cohere,tfs_cohere{compare(i)}(:,CF_ind),'LineWidth',2.5,'Color',colors(compare(i),:));
+    set(gca,'FontSize',15)
+end
+hold off
+%set(gca, 'XScale', 'log')
+legend(instruments(compare));
+    set(gca,'FontSize',15)
+
+xlim([CF(CF_ind)-100, CF(CF_ind)+100]);
+title('Normal Hearing TFS Coherence Across Instruments')
+xlabel('Frequency (Hz)');
+ylabel('Coherence');
+ylim([0,1])
+box on;
+grid on;
+set(gcf,'Position',[1200, 2000, 800, 600]);
+text(CF(CF_ind)-65,.85,strcat('CF = ', num2str(CF(CF_ind))),'FontSize',15,'HorizontalAlignment','center')
+
+figure;
+hold on
+for i = 1:length(compare)
+    plot(freq_cohere,env_cohere{compare(i)}(:,CF_ind),'LineWidth',2.5,'Color',colors(compare(i),:));
+    set(gca,'FontSize',15)
+end
+hold off
+set(gca, 'XScale', 'log')
+legend(instruments(compare));
+    set(gca,'FontSize',15)
+
+xlim([0, CF(CF_ind)+100]);
+title('Normal Hearing ENV Coherence Across Instruments')
+xlabel('Frequency (Hz)');
+ylabel('Coherence');
+ylim([0,1])
+box on;
+grid on;
+set(gcf,'Position',[1200, 2000, 800, 600]);
+text(5,.85,strcat('CF = ', num2str(CF(CF_ind))),'FontSize',15,'HorizontalAlignment','center')
+
+figure;
+
+hold on
+for i = 1:length(instruments)
+    plot(freq_cohere,tfs_cohere{i}(:,CF_ind),'LineWidth',2.5);
+    set(gca,'FontSize',12)
+end
+hold off
+%set(gca, 'XScale', 'log')
+legend(instruments);
+xlim([CF(CF_ind)-100, CF(CF_ind)+100]);
+title('Normal Hearing TFS Coherence Across Instruments')
+xlabel('Frequency (Hz)');
+ylabel('Coherence');
+ylim([0,1])
+box on;
+grid on;
+set(gcf,'Position',[1200, 2000, 800, 600]);
+text(CF(CF_ind)-65,.85,strcat('CF = ', num2str(CF(CF_ind))),'FontSize',15,'HorizontalAlignment','center')
+
+
+figure;
+hold on
+for i = 1:length(instruments)
+   
+    plot(freq_cohere,env_cohere{i}(:,CF_ind),'LineWidth',2.5);
+    
+end
+hold off
+set(gca, 'XScale', 'log')
+title('Normal Hearing ENV Coherence')
+xlabel('Frequency (Hz)');
+ylabel('Coherence');
+ylim([0,1])
+xlim([0, CF(CF_ind)]);
+legend(instruments);
+
+box on;
+grid on;
+text(5,.85,strcat('CF = ', num2str(CF(CF_ind))),'FontSize',15,'HorizontalAlignment','center')
+set(gcf,'Position',[2000, 2000, 800, 600]);
+
+
+%% Coherence NH vs HI:
+
+instrum = instrum;
+CF_ind = CF_ind;
+
+figure;
+subplot(2,1,1);
+hold on
+plot(freq_cohere, tfs_cohere{instrum}(:,CF_ind),'LineWidth',2.5, 'Color',colors(1,:));
+scatter(freq_peak{instrum}(CF_ind), peak_tfs_harm{instrum}(CF_ind), 100,'MarkerFaceColor',colors(1,:),'MarkerEdgeColor',colors(1,:))
+plot(freq_cohere, i_tfs_cohere{instrum}(:,CF_ind),'LineWidth',2.5, 'Color',colors(2,:));
+scatter(i_freq_peak{instrum}(CF_ind), i_peak_tfs_harm{instrum}(CF_ind), 100,'MarkerFaceColor',colors(2,:),'MarkerEdgeColor',colors(2,:))
+hold off
+%set(gca, 'XScale', 'log')
+set(gca, 'FontSize',15);
+xlim([CF(CF_ind)-100, CF(CF_ind)+100]);
+ylim([0,1]);
+title('TFS Coherence')
+legend('Normal','Norm_{Peak}','Impaired','Impaired_{Peak}');
+set(gca, 'FontSize',12);
+ylabel('Coherence');
+
+text(CF(CF_ind)-65,.85,strcat('CF = ', num2str(CF(CF_ind))),'FontSize',15,'HorizontalAlignment','center')
+text(CF(CF_ind)-65,.75,instruments(instrum),'FontSize',15,'HorizontalAlignment','center')
+
+box on;
+grid on;
+
+
+subplot(2,1,2);
+plot(freq_cohere,tfs_cohere{instrum}(:,CF_ind)-i_tfs_cohere{instrum}(:,CF_ind),'k','LineWidth',2.5);
+title('Normal Hearing - Impaired Hearing TFS Coherence')
+legend('NH minus HL Coherence');
+xlim([CF(CF_ind)-100, CF(CF_ind)+100]);
+ylim([-1,1])
+xlabel('Frequency (Hz)');
+ylabel('Difference');
+set(gca, 'FontSize',10);
+box on;
+grid on;
+set(gcf,'Position',[1200, 300, 800, 600]);
+
+figure;
+subplot(2,1,1);
+hold on
+plot(freq_cohere,env_cohere{instrum}(:,CF_ind),'LineWidth',2.5);
+plot(freq_cohere, i_env_cohere{instrum}(:,CF_ind),'LineWidth',2.5);
+rectangle('Position',[2,0.0001,CF(1),1],'linewidth',3);
+hold off
+set(gca, 'XScale', 'log')
+set(gca, 'FontSize',15);
+xlim([0, CF(CF_ind)]);
+ylim([0,1]);
+
+title('ENV Coherence')
+legend('Normal','Impaired');
+set(gca, 'FontSize',13);
+ylabel('Coherence');
+
+text(5,.85,strcat('CF = ', num2str(CF(CF_ind))),'FontSize',15,'HorizontalAlignment','center')
+text(5,.75,instruments(instrum),'FontSize',15,'HorizontalAlignment','center')
+
+box on;
+grid on;
+
+
+subplot(2,1,2);
+plot(freq_cohere,env_cohere{instrum}(:,CF_ind)-i_env_cohere{instrum}(:,CF_ind),'k','LineWidth',2.5);
+legend('NH minus HL Coherence');
+%xlim([CF(CF_ind)-100, CF(CF_ind)+100]);
+title('Normal Hearing - Impaired Hearing ENV Coherence')
+xlabel('Frequency (Hz)');
+ylabel('Difference');
+set(gca, 'FontSize',13);
+ylim([-1,1])
+set(gca, 'XScale', 'log')
+box on;
+grid on;
+set(gcf,'Position',[2000, 300, 800, 600]);
+xlim([0, CF(CF_ind)]);
+
+
+figure;
+
+hold on
+for i = 1:length(instruments)
+    plot(freq_cohere,tfs_cohere{i}(:,CF_ind)-i_tfs_cohere{i}(:,CF_ind),'LineWidth',2.5);
+end
+hold off
+%set(gca, 'XScale', 'log')
+legend(instruments);
+xlim([CF(CF_ind)-100, CF(CF_ind)+100]);
+title('Normal Hearing - Impaired Hearing TFS Coherence')
+xlabel('Frequency (Hz)');
+ylabel('Difference');
+set(gca, 'FontSize',15);
+ylim([-1,1])
+box on;
+grid on;
+set(gcf,'Position',[1200, 2000, 800, 600]);
+text(CF(CF_ind)-65,.85,strcat('CF = ', num2str(CF(CF_ind))),'FontSize',15,'HorizontalAlignment','center')
+
+
+figure;
+hold on
+for i = 1:length(instruments)
+   
+    if i == 1
+            plot(freq_cohere,env_cohere{i}(:,CF_ind)-i_env_cohere{i}(:,CF_ind),'k-','LineWidth',2.5);
+    
+    elseif i == 2
+            plot(freq_cohere,env_cohere{i}(:,CF_ind)-i_env_cohere{i}(:,CF_ind),'b-','LineWidth',2.5);
+    end
+    
+end
+hold off
+set(gca, 'XScale', 'log')
+title('Normal Hearing - Impaired Hearing ENV Coherence')
+xlabel('Frequency (Hz)');
+ylabel('Difference');
+set(gca, 'FontSize',15);
+ylim([-1,1])
+xlim([0, CF(CF_ind)]);
+legend(instruments);
+
+box on;
+grid on;
+text(5,.85,strcat('CF = ', num2str(CF(CF_ind))),'FontSize',15,'HorizontalAlignment','center')
+set(gcf,'Position',[2000, 2000, 800, 600]);
+
+
+figure;
+subplot(2,1,1)
+hold on;
+for i = 1:length(compare)
+    plot(CF, 100*(peak_tfs_harm{compare(i)}-i_peak_tfs_harm{compare(i)})./peak_tfs_harm{compare(i)},'o-','linewidth',2,'Color', colors(compare(i),:))
+end
+set(gca, 'XScale', 'log')
+title('TFS Coherence Deficit (NH-HI)')
+ylabel('Percentage Loss');
+legend(instruments,'location','NorthWest');
+set(gca, 'FontSize',15);
+grid on
+
+subplot(2,1,2)
+hold on;
+line([440,max(CF)],[0.0001,0.00001],'color','k','linewidth',3);
+for i = 1:length(compare)
+    plot(CF, 100*(env_cohere_mean{compare(i)}-i_env_cohere_mean{compare(i)})./env_cohere_mean{compare(i)},'o-','linewidth',2,'Color', colors(compare(i),:))
+end
+set(gca, 'XScale', 'log')
+title('ENV Coherence Deficit (NH-HI)')
+xlabel('Characteristic Frequency (Hz)');
+ylabel('Percentage Loss');
+set(gca, 'FontSize',15);
+set(gcf,'Position',[1200, 300, 800, 600]);
+grid on
+
+%% Cross Spectral Density
+
+instrum = instrum;
+CF_ind = CF_ind;
+
+figure;
+subplot(2,1,1);
+hold on
+plot(freq_SD, tfs_csd{instrum}(:,CF_ind),'LineWidth',2.5);
+plot(freq_cohere, i_tfs_csd{instrum}(:,CF_ind),'LineWidth',2.5);
+hold off
+%set(gca, 'XScale', 'log')
+set(gca, 'FontSize',10);
+xlim([CF(CF_ind)-100, CF(CF_ind)+100]);
+% ylim([0,1]);
+title('TFS Cross-Spectral Density')
+legend('Normal','Impaired');
+ylabel('CSD (dB/Hz)');
+
+text(CF(CF_ind)-65,max(tfs_csd{instrum}(:,CF_ind)),strcat('CF = ', num2str(CF(CF_ind))),'FontSize',15,'HorizontalAlignment','center')
+text(CF(CF_ind)-65,max(tfs_csd{instrum}(:,CF_ind))-10,instruments(instrum),'FontSize',15,'HorizontalAlignment','center')
+
+box on;
+grid on;
+
+subplot(2,1,2);
+plot(freq_cohere,tfs_csd{instrum}(:,CF_ind)-i_tfs_csd{instrum}(:,CF_ind),'k','LineWidth',2.5);
+title('Normal Hearing - Impaired Hearing TFS CSD')
+legend('NH minus HL Coherence');
+xlim([CF(CF_ind)-100, CF(CF_ind)+100]);
+%ylim([-1,1])
+xlabel('Frequency (Hz)');
+ylabel('Difference (dB/Hz)');
+set(gca, 'FontSize',10);
+box on;
+grid on;
+set(gcf,'Position',[1200, 300, 800, 600]);
+
+
+figure;
+subplot(2,1,1);
+hold on
+plot(freq_SD, env_csd{instrum}(:,CF_ind),'LineWidth',2.5);
+plot(freq_cohere, i_env_csd{instrum}(:,CF_ind),'LineWidth',2.5);
+hold off
+set(gca, 'XScale', 'log')
+set(gca, 'FontSize',10);
+%xlim([CF(CF_ind)-100, CF(CF_ind)+100]);
+% ylim([0,1]);
+title('ENV Cross-Spectral Density')
+legend('Normal','Impaired');
+ylabel('CSD (dB/Hz)');
+
+text(10,max(env_csd{instrum}(:,CF_ind)),strcat('CF = ', num2str(CF(CF_ind))),'FontSize',15,'HorizontalAlignment','center')
+text(10,max(env_csd{instrum}(:,CF_ind))-10,instruments(instrum),'FontSize',15,'HorizontalAlignment','center')
+
+box on;
+grid on;
+
+subplot(2,1,2);
+plot(freq_cohere,env_csd{instrum}(:,CF_ind)-i_env_csd{instrum}(:,CF_ind),'k','LineWidth',2.5);
+title('Normal Hearing - Impaired Hearing ENV CSD')
+legend('NH minus HL Coherence');
+%xlim([CF(CF_ind)-100, CF(CF_ind)+100]);
+%ylim([-1,1])
+set(gca, 'XScale', 'log')
+xlabel('Frequency (Hz)');
+ylabel('Difference (dB/Hz)');
+set(gca, 'FontSize',FontSize);
+box on;
+grid on;
+set(gcf,'Position',[1200, 300, 800, 600]);
+
+
