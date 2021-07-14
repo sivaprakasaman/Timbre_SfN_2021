@@ -37,7 +37,7 @@ The methods are summarized by the below diagram.
 ---
 ## Sample Figures:
 
-I chose to compare the coding of four different instrumental sounds with distinct timbral characteristics ([original recordings](https://philharmonia.co.uk/resources/sound-samples/) and resynthesized stimuli). I also compared the coding of two different articulations played on the violin, *spiccato* and *martele*. All stimuli had the same pitch (440Hz/A4). I simulated a flat 40 dB hearing loss (using a mix of Inner Hair Cell (IHC) and Outer Hair Cell (OHC)impairment) at all cochlear regions for simplicity. In the hearing-impaired condition, a compensatory volume increase of 40 dB was added.
+I chose to compare the coding of four different instrumental sounds with distinct timbral characteristics ([original recordings](https://philharmonia.co.uk/resources/sound-samples/) and resynthesized stimuli). I also compared the coding of two different articulations played on the violin, *spiccato* and *martele*. All stimuli had the same pitch (440Hz/A4). I simulated a flat 40 dB hearing loss (using a mix of Inner Hair Cell (IHC) and Outer Hair Cell (OHC) impairment) at all cochlear regions for simplicity. In the hearing-impaired condition, a compensatory volume increase of 40 dB was added.
 
 To quantify coding deficits across auditory neurons of varying CF, I chose to look at the difference between the normal and impaired hearing coherence at each CF. TFS deficit (Percentage Loss) was quantified as the percent difference at each harmonic of 440 Hz in the TFS coherence spectrum, and ENV deficit was quantified as the mean coherence difference in a 0-440Hz band in the ENV coherence spectrum. 
 
