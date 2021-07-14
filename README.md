@@ -50,7 +50,10 @@ The results across instruments were also visualized. TFS coherence tends to wors
 <p float="left">
 <img src="Figures/TFS_ENV_Compare_PartA.png" width="390" height="280">
 <img src="Figures/TFS_ENV_Compare_PartB.png" width="390" height="280">
+</p>
+<p float = "center">
 <img src="Figures/TFS_ENV_Compare_PartC.png" width="390" height="280">
 </p>
+
 
 Note that the **TFS and ENV coherence varies depending on the instrument and articulation**. Therefore, it may be possible that our ability to differentiate between instrumental sounds using timbre may be impacted differently depending on the sound itself. For example, maybe we can distinguish a violin's sound better than that of a bassoon, even if we have hearing loss.  
