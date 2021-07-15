@@ -28,7 +28,8 @@ The methods are summarized by the below diagram.
 `/stimulus_generation` - Collection of bespoke Python scripts to resynthesize stimuli in a more quantitative fashion based on spectral properties:
 
 <p align = "middle">
-![comparison](/Figures/comparison2.png)
+<img src="/Figures/comparison2.png">
+![comparison]()
 </p>
 `/BEZ2018` - The Bruce, Erfani, and Zilany 2018 [Auditory Nerve model](https://github.com/yousoferfani/BEZ_model).
 
