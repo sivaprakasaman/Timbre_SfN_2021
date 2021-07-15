@@ -29,7 +29,6 @@ The methods are summarized by the below diagram.
 
 <p align = "middle">
 <img src="/Figures/comparison2.png">
-![comparison]()
 </p>
 `/BEZ2018` - The Bruce, Erfani, and Zilany 2018 [Auditory Nerve model](https://github.com/yousoferfani/BEZ_model).
 
