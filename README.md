@@ -10,6 +10,8 @@ Here, a framework for examining and testing the role of temporal envelope (ENV) 
 
 Therefore, a particular question emerges-- **is our coding and perception of timbre impacted by hearing loss?**
 
+![Violin Through Cochlea](/Figures/violin_filtered.png)
+
 The code provided allows the user to either provide real-world sounds or generate synthetic stimuli with variable timbre and look at how coding of ENV and TFS features of these stimuli is effected with varying degrees and types of hearing loss. While ENV and TFS are quite possibly an oversimplified way to look at timbre, it is a start.
 
 ---
@@ -17,7 +19,7 @@ The code provided allows the user to either provide real-world sounds or generat
 
 The methods are summarized by the below diagram.
 
-![Methods Flow Chart](/Figures/methods_flow.png)
+![Methods Flow Chart](/Figures/methods_flow_sfn.png)
 
 ### Code Synopsis:
 
